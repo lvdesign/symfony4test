@@ -52,40 +52,18 @@ class BlogController extends AbstractController
      * to constraint the HTTP methods each controller responds to (by default
      * it responds to all methods).
      */
-    public function new(Request $request): Response
+    public function new(Request $request, Post $post): Response
     {
-        $post = new Post();
-        $post->setAuthor($this->getUser());
+        // @todo: manage the form and the post.
 
-        // See https://symfony.com/doc/current/book/forms.html#submitting-forms-with-multiple-buttons
-        $form = $this->createForm(PostType::class, $post)
-            ->add('saveAndCreateNew', SubmitType::class);
+        // $form = $this->createForm(PostType::class, $post);
+        // $form->handleRequest($request);
 
-        $form->handleRequest($request);
-
-        // the isSubmitted() method is completely optional because the other
-        // isValid() method already checks whether the form is submitted.
-        // However, we explicitly add it to improve code readability.
-        // See https://symfony.com/doc/current/best_practices/forms.html#handling-form-submits
-        if ($form->isSubmitted() && $form->isValid()) {
-            $post->setSlug(Slugger::slugify($post->getTitle()));
-
-            $em = $this->getDoctrine()->getManager();
-            $em->persist($post);
-            $em->flush();
-
-            // Flash messages are used to notify the user about the result of the
-            // actions. They are deleted automatically from the session as soon
-            // as they are accessed.
-            // See https://symfony.com/doc/current/book/controller.html#flash-messages
-            $this->addFlash('success', 'post.created_successfully');
-
-            if ($form->get('saveAndCreateNew')->isClicked()) {
-                return $this->redirectToRoute('admin_post_new');
-            }
-
-            return $this->redirectToRoute('admin_post_index');
-        }
+        // if($form->isSubmitedd() && $form->isValid()){
+        //     $manager->persist($post);
+        //     $manager->fush();
+        //     return $this->redirectToRoute('admin/blog/blog_show', ['id' => $post->getId() ]);
+        // }
 
         return $this->render('admin/blog/new.html.twig', [
             'post' => $post,
@@ -100,14 +78,12 @@ class BlogController extends AbstractController
      */
     public function show(Post $post): Response
     {
-        // This security check can also be performed
-        // using an annotation: @IsGranted("show", subject="post")
-        $this->denyAccessUnlessGranted('show', $post, 'Posts can only be shown to their authors.');
-
-        return $this->render('admin/blog/show.html.twig', [
-            'post' => $post,
+        // @todo: render the template with the post -> OK
+        return $this->render('admin/blog/show.html.twig',[
+            'post' => $post
         ]);
     }
+
 
     /**
      * Displays a form to edit an existing Post entity.
@@ -122,18 +98,21 @@ class BlogController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $post->setSlug(Slugger::slugify($post->getTitle()));
-            $this->getDoctrine()->getManager()->flush();
+            // @todo: persist the update
 
             $this->addFlash('success', 'post.updated_successfully');
 
             return $this->redirectToRoute('admin_post_edit', ['id' => $post->getId()]);
         }
 
-        return $this->render('admin/blog/edit.html.twig', [
-            'post' => $post,
-            'form' => $form->createView(),
+        // @todo rendrer the post and form
+
+        return $this->render('admin/blog/edit.html.twig',[
+            'form' => $form-> createView(),
+            'edit' => $post->getId() !== null
         ]);
     }
+
 
     /**
      * Deletes a Post entity.
@@ -152,12 +131,12 @@ class BlogController extends AbstractController
         // because foreign key support is not enabled by default in SQLite
         $post->getTags()->clear();
 
-        $em = $this->getDoctrine()->getManager();
-        $em->remove($post);
-        $em->flush();
+        // @todo: delete the post
 
         $this->addFlash('success', 'post.deleted_successfully');
 
         return $this->redirectToRoute('admin_post_index');
     }
+
+
 }
