@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Post;
 use App\Form\PostType;
 use App\Repository\PostRepository;
+
 use App\Utils\Slugger;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
@@ -52,18 +53,31 @@ class BlogController extends AbstractController
      * to constraint the HTTP methods each controller responds to (by default
      * it responds to all methods).
      */
-    public function new(Request $request, Post $post): Response
+    public function new(Request $request): Response
     {
         // @todo: manage the form and the post.
+        $post = new Post();
 
-        // $form = $this->createForm(PostType::class, $post);
-        // $form->handleRequest($request);
+        $form = $this->createForm(PostType::class, $post);
+        $form->handleRequest($request);
 
-        // if($form->isSubmitedd() && $form->isValid()){
-        //     $manager->persist($post);
-        //     $manager->fush();
-        //     return $this->redirectToRoute('admin/blog/blog_show', ['id' => $post->getId() ]);
-        // }
+       if($form->isSubmitted() && $form->isValid()){
+
+        //
+        $post->setSlug(Slugger::slugify($post->getTitle()));
+
+        // dump($post);
+
+        // manque le champ author
+
+            $em= $this->getDoctrine()->getManager();
+            $em->persist($post);
+            $em->flush();
+
+            $this->addFlash('success', 'post.created_successfully');
+
+            return $this->redirectToRoute('admin/blog/blog_show', ['id' => $post->getId() ]);
+         }
 
         return $this->render('admin/blog/new.html.twig', [
             'post' => $post,
@@ -99,6 +113,7 @@ class BlogController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $post->setSlug(Slugger::slugify($post->getTitle()));
             // @todo: persist the update
+
 
             $this->addFlash('success', 'post.updated_successfully');
 
